@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Leadify" />
+<title>Leadify Dashboard</title>
+<link rel="apple-touch-icon" sizes="180x180" href="icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="icon.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="icon.png" />
+<link rel="shortcut icon" href="icon.png" />
+
+<style>
+/* =========================================================
+   LEADIFY DASHBOARD - PREMIUM PRIVATE WEBAPP
+   Farben: Schwarz / Weiß / Grün (#22C55E)
+   Stack: HTML + CSS + Vanilla JS + LocalStorage
+   ========================================================= */
+
+/* ---------- Design Tokens ---------- */
+:root{
+  --bg: #000000;
+  --bg-elevated: #0c0c0d;
+  --bg-card: #131315;
+  --bg-card-hover: #18181b;
+  --border: #1f1f23;
+  --border-strong: #2a2a30;
+  --text: #ffffff;
+  --text-muted: #8a8a93;
+  --text-dim: #5a5a63;
+  --accent: #22C55E;
+  --accent-dim: rgba(34, 197, 94, 0.12);
+  --accent-glow: rgba(34, 197, 94, 0.25);
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 22px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ---------- Reset & Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body{
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+  letter-spacing: -0.01em;
+  padding-bottom: calc(90px + env(safe-area-inset-bottom));
+}
+button, input, select, textarea { font-family: inherit; }
+button { cursor: pointer; border: none; background: none; color: inherit; }
+
+/* ---------- Layout ---------- */
+.app{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 0;
+}
+@media (min-width: 768px){
+  .app{ padding: 32px 40px 0; }
+}
+
+/* ---------- Header ---------- */
+.header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-top: env(safe-area-inset-top);
+}
+.logo{
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.logo-arrow{
+  color: var(--accent);
+  font-size: 14px;
+  transform: translateY(-6px);
+}
+.date-chip{
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+/* ---------- View System ---------- */
+.view{ display: none; animation: fadeIn 0.35s ease; }
+.view.active{ display: block; }
+@keyframes fadeIn{
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Section Titles ---------- */
+.section-title{
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+.section-sub{
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 22px;
+}
+.subtitle{
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 28px 0 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- Stats Grid (Dashboard) ---------- */
+.stats-grid{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+@media (min-width: 640px){
+  .stats-grid{ grid-template-columns: repeat(5, 1fr); }
+}
+.stat-card{
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.stat-card:hover{ border-color: var(--border-strong); }
+.stat-label{
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.stat-value{
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+.stat-value.green{ color: var(--accent); }
+
+/* ---------- Card Base ---------- */
+.card{
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 14px;
+}
+.card-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.card-title{
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Progress Bar ---------- */
+.progress-wrap{
+  background: var(--bg-elevated);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.progress-bar{
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #16a34a);
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.progress-text{
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.progress-text strong{ color: var(--text); font-weight: 700; }
+
+/* ---------- Task List ---------- */
+.task-input-row{
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.task-input-row input{
+  flex: 1;
+}
+.task-list{ list-style: none; padding: 0; margin: 0; }
+.task-item{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--border);
+}
+.task-item:last-child{ border-bottom: none; }
+.task-check{
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border: 2px solid var(--border-strong);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.task-check.done{
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.task-check.done::after{
+  content: "✓";
+  color: #000;
+  font-weight: 800;
+  font-size: 14px;
+}
+.task-text{
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.task-text.done{
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+.task-delete{
+  color: var(--text-dim);
+  font-size: 20px;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+.task-delete:hover{ color: var(--danger); }
+
+/* ---------- Form Inputs ---------- */
+input[type="text"], input[type="number"], input[type="date"], select, textarea{
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+input:focus, select:focus, textarea:focus{
+  border-color: var(--accent);
+  background: var(--bg-card-hover);
+}
+input::placeholder, textarea::placeholder{ color: var(--text-dim); }
+textarea{ resize: vertical; min-height: 100px; font-family: inherit; }
+select{
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a93' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: transform 0.15s ease, background 0.2s ease;
+  white-space: nowrap;
+}
+.btn:active{ transform: scale(0.97); }
+.btn-primary{
+  background: var(--accent);
+  color: #000;
+}
+.btn-primary:hover{ background: #1ea954; }
+.btn-secondary{
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover{ background: var(--bg-card-hover); }
+.btn-danger{
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.btn-danger:hover{ background: rgba(239, 68, 68, 0.1); }
+.btn-icon{
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  padding: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  font-size: 18px;
+}
+.btn-icon:hover{ background: var(--bg-card-hover); }
+.btn-full{ width: 100%; }
+
+/* ---------- Wochenziele Grid ---------- */
+.goal-row{
+  display: grid;
+  grid-template-columns: 1fr 90px 90px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.goal-label{
+  font-size: 15px;
+  font-weight: 600;
+}
+.goal-input{ text-align: center; padding: 12px 8px !important; }
+.goal-progress-row{ margin-top: 18px; }
+.goal-progress-row .progress-text{ font-size: 12px; }
+
+/* ---------- Lead / Projekt Cards ---------- */
+.list-toolbar{
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.list-toolbar input{ flex: 1; }
+.entity-card{
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s ease;
+}
+.entity-card:hover{ border-color: var(--border-strong); }
+.entity-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.entity-name{
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  letter-spacing: -0.01em;
+}
+.entity-meta{
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.entity-actions{
+  display: flex;
+  gap: 6px;
+}
+.entity-body{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 18px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.entity-field{ display: flex; flex-direction: column; gap: 2px; }
+.entity-field-label{
+  color: var(--text-dim);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.entity-field-value{ color: var(--text); font-size: 14px; }
+.entity-note{
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* ---------- Status Badges ---------- */
+.badge{
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-neu          { background: rgba(255,255,255,0.06); color: #fff; }
+.badge-kontaktiert  { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-interesse    { background: rgba(168, 85, 247, 0.15); color: #c084fc; }
+.badge-angebot      { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-gewonnen     { background: var(--accent-dim); color: var(--accent); }
+.badge-verloren     { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.badge-offen        { background: rgba(255,255,255,0.06); color: #fff; }
+.badge-arbeit       { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge-wartet       { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge-abgeschlossen{ background: var(--accent-dim); color: var(--accent); }
+
+/* ---------- Empty State ---------- */
+.empty{
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--text-dim);
+}
+.empty-icon{
+  font-size: 38px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+.empty-title{
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+/* ---------- Notizen ---------- */
+.note-card{
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.note-meta{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.note-date{
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.note-content{
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 0;
+}
+.modal-overlay.active{ display: flex; animation: fadeIn 0.25s ease; }
+.modal{
+  background: var(--bg-card);
+  border-top: 1px solid var(--border-strong);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (min-width: 640px){
+  .modal-overlay{ align-items: center; padding: 20px; }
+  .modal{ border-radius: var(--radius-lg); border: 1px solid var(--border-strong); }
+}
+@keyframes slideUp{
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.modal-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.modal-title{
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.modal-close{
+  font-size: 22px;
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.form-grid{
+  display: grid;
+  gap: 14px;
+}
+.form-field label{
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.form-actions{
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.form-actions .btn{ flex: 1; }
+
+/* ---------- Bottom Navigation (Mobile) ---------- */
+.bottom-nav{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(12, 12, 13, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 4px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 50;
+}
+.nav-btn{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.nav-btn .nav-icon{
+  font-size: 22px;
+  line-height: 1;
+}
+.nav-btn.active{ color: var(--accent); }
+.nav-btn:hover{ color: var(--text); }
+.nav-btn.active:hover{ color: var(--accent); }
+
+/* ---------- Desktop Layout Tweaks ---------- */
+@media (min-width: 900px){
+  body{ padding-bottom: 0; }
+  .bottom-nav{
+    position: sticky;
+    top: 0;
+    bottom: auto;
+    border-top: none;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    padding-bottom: 12px;
+    max-width: 1100px;
+    margin: 0 auto;
+    border-radius: 0 0 var(--radius) var(--radius);
+    justify-content: flex-start;
+    gap: 4px;
+  }
+  .nav-btn{
+    flex: none;
+    flex-direction: row;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .nav-btn.active{ background: var(--accent-dim); }
+  .nav-btn .nav-icon{ font-size: 18px; }
+  .entity-body{ grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ---------- Utilities ---------- */
+.flex-between{ display: flex; justify-content: space-between; align-items: center; }
+.text-muted{ color: var(--text-muted); }
+.mb-0{ margin-bottom: 0 !important; }
+.mt-2{ margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ========================================================
+     APP CONTAINER
+     ======================================================== -->
+<div class="app">
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="logo">Leadify<span class="logo-arrow">↗</span></div>
+    <div class="date-chip" id="dateChip"></div>
+  </header>
+
+  <!-- ====================================================
+       VIEW 1: DASHBOARD / HEUTE
+       ==================================================== -->
+  <section class="view active" data-view="heute">
+    <h1 class="section-title" id="greeting">Willkommen zurück, Tim</h1>
+    <p class="section-sub" id="todayLabel"></p>
+
+    <!-- Statistik-Karten -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Aufgaben offen</div>
+        <div class="stat-value" id="statTasksOpen">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Erledigt</div>
+        <div class="stat-value green" id="statTasksDone">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Leads gesamt</div>
+        <div class="stat-value" id="statLeadsTotal">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Gewonnen</div>
+        <div class="stat-value green" id="statLeadsWon">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Projekte offen</div>
+        <div class="stat-value" id="statProjectsOpen">0</div>
+      </div>
+    </div>
+
+    <!-- Top 3 Aufgaben heute -->
+    <div class="card mt-2">
+      <div class="card-header">
+        <h2 class="card-title">Top 3 Aufgaben heute</h2>
+        <span class="text-muted" id="taskProgressLabel" style="font-size:13px;">0%</span>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar" id="taskProgressBar" style="width:0%"></div>
+      </div>
+
+      <div class="task-input-row" style="margin-top:18px;">
+        <input type="text" id="taskInput" placeholder="Neue Aufgabe hinzufügen..." maxlength="120" />
+        <button class="btn btn-primary" id="addTaskBtn">+</button>
+      </div>
+
+      <ul class="task-list" id="taskList"></ul>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       VIEW 2: WOCHENZIELE
+       ==================================================== -->
+  <section class="view" data-view="ziele">
+    <h1 class="section-title">Wochenziele</h1>
+    <p class="section-sub">Setze deine Ziele und tracke deinen Fortschritt</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Diese Woche</h2>
+        <button class="btn btn-secondary" id="resetGoalsBtn" style="padding:8px 14px;font-size:13px;">Reset</button>
+      </div>
+
+      <!-- Header-Zeile für Spalten -->
+      <div class="goal-row" style="margin-bottom:8px;">
+        <div></div>
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;text-align:center;">Ist</div>
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;text-align:center;">Ziel</div>
+      </div>
+
+      <!-- Die einzelnen Wochenziele -->
+      <div id="goalsContainer"></div>
+
+      <div class="goal-progress-row">
+        <div class="progress-wrap">
+          <div class="progress-bar" id="goalsProgressBar" style="width:0%"></div>
+        </div>
+        <div class="progress-text">
+          <span>Gesamtfortschritt</span>
+          <strong id="goalsProgressText">0%</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================
+       VIEW 3: LEADS
+       ==================================================== -->
+  <section class="view" data-view="leads">
+    <h1 class="section-title">Leads</h1>
+    <p class="section-sub">Verwalte deine potenziellen Kunden</p>
+
+    <div class="list-toolbar">
+      <input type="text" id="leadSearch" placeholder="Leads suchen..." />
+      <button class="btn btn-primary" id="addLeadBtn">+ Neu</button>
+    </div>
+
+    <div id="leadsList"></div>
+  </section>
+
+  <!-- ====================================================
+       VIEW 4: PROJEKTE
+       ==================================================== -->
+  <section class="view" data-view="projekte">
+    <h1 class="section-title">Projekte</h1>
+    <p class="section-sub">Behalte deine laufenden Projekte im Blick</p>
+
+    <div class="list-toolbar">
+      <input type="text" id="projectSearch" placeholder="Projekte suchen..." />
+      <button class="btn btn-primary" id="addProjectBtn">+ Neu</button>
+    </div>
+
+    <div id="projectsList"></div>
+  </section>
+
+  <!-- ====================================================
+       VIEW 5: NOTIZEN
+       ==================================================== -->
+  <section class="view" data-view="notizen">
+    <h1 class="section-title">Notizen & Ideen</h1>
+    <p class="section-sub">Instagram-Ideen, Angebote, Einwände, Texte</p>
+
+    <div class="card">
+      <textarea id="noteInput" placeholder="Was geht dir durch den Kopf?"></textarea>
+      <button class="btn btn-primary btn-full mt-2" id="addNoteBtn">Notiz speichern</button>
+    </div>
+
+    <div id="notesList" style="margin-top:18px;"></div>
+  </section>
+
+</div>
+
+<!-- ====================================================
+     BOTTOM NAVIGATION
+     ==================================================== -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-target="heute">
+    <span class="nav-icon">⌂</span>
+    <span>Heute</span>
+  </button>
+  <button class="nav-btn" data-target="ziele">
+    <span class="nav-icon">◎</span>
+    <span>Ziele</span>
+  </button>
+  <button class="nav-btn" data-target="leads">
+    <span class="nav-icon">◆</span>
+    <span>Leads</span>
+  </button>
+  <button class="nav-btn" data-target="projekte">
+    <span class="nav-icon">▣</span>
+    <span>Projekte</span>
+  </button>
+  <button class="nav-btn" data-target="notizen">
+    <span class="nav-icon">✎</span>
+    <span>Notizen</span>
+  </button>
+</nav>
+
+<!-- ====================================================
+     MODAL (für Lead- und Projekt-Editor)
+     ==================================================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="modalTitle">Neuer Eintrag</h2>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   LEADIFY DASHBOARD - LOGIC
+   ========================================================= */
+
+/* ---------- Storage Keys ---------- */
+const STORAGE = {
+  tasks:    'leadify_tasks',
+  goals:    'leadify_goals',
+  leads:    'leadify_leads',
+  projects: 'leadify_projects',
+  notes:    'leadify_notes'
+};
+
+/* ---------- LocalStorage Helpers ---------- */
+// Holt Daten aus dem LocalStorage und parst JSON
+function load(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch(e){
+    return fallback;
+  }
+}
+// Speichert Daten als JSON ins LocalStorage
+function save(key, data){
+  localStorage.setItem(key, JSON.stringify(data));
+}
+// Erzeugt eine eindeutige ID
+function uid(){
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+/* ---------- App-State (wird beim Start aus LocalStorage geladen) ---------- */
+let state = {
+  tasks:    load(STORAGE.tasks, []),
+  goals:    load(STORAGE.goals, defaultGoals()),
+  leads:    load(STORAGE.leads, []),
+  projects: load(STORAGE.projects, []),
+  notes:    load(STORAGE.notes, [])
+};
+
+/* ---------- Default-Werte für Wochenziele ---------- */
+function defaultGoals(){
+  return [
+    { key: 'kontakte',  label: 'Kontakte',         current: 0, target: 50 },
+    { key: 'dms',       label: 'DMs',              current: 0, target: 30 },
+    { key: 'calls',     label: 'Calls',            current: 0, target: 10 },
+    { key: 'angebote',  label: 'Angebote',         current: 0, target: 5  },
+    { key: 'abschluss', label: 'Abschlüsse',       current: 0, target: 2  }
+  ];
+}
+
+/* =========================================================
+   HEADER: Datum + Begrüßung
+   ========================================================= */
+function renderHeader(){
+  const now = new Date();
+  const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+  const dateStr = now.toLocaleDateString('de-DE', opts);
+  document.getElementById('dateChip').textContent = dateStr;
+  document.getElementById('todayLabel').textContent = dateStr;
+
+  // Begrüßung abhängig von der Tageszeit
+  const h = now.getHours();
+  let greet = 'Willkommen zurück';
+  if (h < 11) greet = 'Guten Morgen';
+  else if (h < 18) greet = 'Schönen Tag';
+  else greet = 'Guten Abend';
+  document.getElementById('greeting').textContent = `${greet}, Tim`;
+}
+
+/* =========================================================
+   NAVIGATION zwischen den Views
+   ========================================================= */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.target;
+    // Buttons umschalten
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Views umschalten
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelector(`.view[data-view="${target}"]`).classList.add('active');
+    // Nach oben scrollen für bessere UX
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+/* =========================================================
+   AUFGABEN (Tasks)
+   ========================================================= */
+const taskList = document.getElementById('taskList');
+const taskInput = document.getElementById('taskInput');
+const addTaskBtn = document.getElementById('addTaskBtn');
+
+// Aufgaben rendern
+function renderTasks(){
+  taskList.innerHTML = '';
+
+  if (state.tasks.length === 0){
+    taskList.innerHTML = `
+      <li class="empty">
+        <div class="empty-icon">✓</div>
+        <div class="empty-title">Noch keine Aufgaben</div>
+        <div>Füge deine Top 3 Aufgaben für heute hinzu</div>
+      </li>`;
+  } else {
+    state.tasks.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'task-item';
+      li.innerHTML = `
+        <button class="task-check ${t.done ? 'done' : ''}" data-id="${t.id}" data-act="toggle"></button>
+        <span class="task-text ${t.done ? 'done' : ''}">${escapeHtml(t.text)}</span>
+        <button class="task-delete" data-id="${t.id}" data-act="delete">×</button>
+      `;
+      taskList.appendChild(li);
+    });
+  }
+
+  // Fortschritt berechnen
+  const total = state.tasks.length;
+  const done = state.tasks.filter(t => t.done).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  document.getElementById('taskProgressBar').style.width = pct + '%';
+  document.getElementById('taskProgressLabel').textContent = pct + '%';
+
+  renderStats(); // Stats updaten
+}
+
+// Aufgabe hinzufügen
+addTaskBtn.addEventListener('click', addTask);
+taskInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+function addTask(){
+  const text = taskInput.value.trim();
+  if (!text) return;
+  state.tasks.push({ id: uid(), text, done: false, created: Date.now() });
+  save(STORAGE.tasks, state.tasks);
+  taskInput.value = '';
+  renderTasks();
+}
+
+// Klicks auf Toggle / Delete via Event-Delegation
+taskList.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const act = btn.dataset.act;
+  const task = state.tasks.find(t => t.id === id);
+  if (!task) return;
+
+  if (act === 'toggle'){
+    task.done = !task.done;
+  } else if (act === 'delete'){
+    state.tasks = state.tasks.filter(t => t.id !== id);
+  }
+  save(STORAGE.tasks, state.tasks);
+  renderTasks();
+});
+
+/* =========================================================
+   WOCHENZIELE
+   ========================================================= */
+const goalsContainer = document.getElementById('goalsContainer');
+
+function renderGoals(){
+  goalsContainer.innerHTML = '';
+  state.goals.forEach((g, idx) => {
+    const row = document.createElement('div');
+    row.className = 'goal-row';
+    row.innerHTML = `
+      <div class="goal-label">${g.label}</div>
+      <input type="number" class="goal-input" data-idx="${idx}" data-field="current" value="${g.current}" min="0" inputmode="numeric" />
+      <input type="number" class="goal-input" data-idx="${idx}" data-field="target"  value="${g.target}"  min="0" inputmode="numeric" />
+    `;
+    goalsContainer.appendChild(row);
+  });
+
+  // Listener für Input-Änderungen
+  goalsContainer.querySelectorAll('.goal-input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.idx;
+      const field = e.target.dataset.field;
+      state.goals[idx][field] = Math.max(0, +e.target.value || 0);
+      save(STORAGE.goals, state.goals);
+      updateGoalsProgress();
+    });
+  });
+
+  updateGoalsProgress();
+}
+
+function updateGoalsProgress(){
+  // Durchschnittlicher Erfüllungsgrad aller Ziele (cap bei 100%)
+  let totalPct = 0;
+  state.goals.forEach(g => {
+    const p = g.target > 0 ? Math.min(100, (g.current / g.target) * 100) : 0;
+    totalPct += p;
+  });
+  const avg = Math.round(totalPct / state.goals.length);
+  document.getElementById('goalsProgressBar').style.width = avg + '%';
+  document.getElementById('goalsProgressText').textContent = avg + '%';
+}
+
+// Wochenziele zurücksetzen
+document.getElementById('resetGoalsBtn').addEventListener('click', () => {
+  if (!confirm('Wochenziele wirklich zurücksetzen? (Ist-Werte werden auf 0 gesetzt)')) return;
+  state.goals.forEach(g => g.current = 0);
+  save(STORAGE.goals, state.goals);
+  renderGoals();
+});
+
+/* =========================================================
+   LEADS
+   ========================================================= */
+const LEAD_STATUSES = ['Neu', 'Kontaktiert', 'Interesse', 'Angebot gesendet', 'Gewonnen', 'Verloren'];
+const leadsList = document.getElementById('leadsList');
+const leadSearch = document.getElementById('leadSearch');
+
+document.getElementById('addLeadBtn').addEventListener('click', () => openLeadModal());
+leadSearch.addEventListener('input', renderLeads);
+
+function renderLeads(){
+  const q = leadSearch.value.trim().toLowerCase();
+  const filtered = state.leads.filter(l => {
+    if (!q) return true;
+    return (l.name + ' ' + l.branche + ' ' + l.status + ' ' + (l.notiz||'')).toLowerCase().includes(q);
+  });
+
+  leadsList.innerHTML = '';
+
+  if (filtered.length === 0){
+    leadsList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">◆</div>
+        <div class="empty-title">${state.leads.length === 0 ? 'Noch keine Leads' : 'Keine Treffer'}</div>
+        <div>${state.leads.length === 0 ? 'Lege deinen ersten Lead an' : 'Suchbegriff anpassen'}</div>
+      </div>`;
+    renderStats();
+    return;
+  }
+
+  filtered.forEach(l => {
+    const card = document.createElement('div');
+    card.className = 'entity-card';
+    card.innerHTML = `
+      <div class="entity-header">
+        <div>
+          <h3 class="entity-name">${escapeHtml(l.name) || '—'}</h3>
+          <div class="entity-meta">${escapeHtml(l.branche) || 'Keine Branche'}</div>
+        </div>
+        <span class="badge ${badgeClassLead(l.status)}">${l.status}</span>
+      </div>
+      <div class="entity-body">
+        <div class="entity-field">
+          <span class="entity-field-label">Kontakt</span>
+          <span class="entity-field-value">${escapeHtml(l.kontakt) || '—'}</span>
+        </div>
+        <div class="entity-field">
+          <span class="entity-field-label">Nächster Schritt</span>
+          <span class="entity-field-value">${escapeHtml(l.naechsterSchritt) || '—'}</span>
+        </div>
+        <div class="entity-field">
+          <span class="entity-field-label">Follow-up</span>
+          <span class="entity-field-value">${l.followup ? formatDate(l.followup) : '—'}</span>
+        </div>
+      </div>
+      ${l.notiz ? `<div class="entity-note">${escapeHtml(l.notiz)}</div>` : ''}
+      <div class="entity-actions" style="margin-top:14px;">
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:10px;" data-act="edit-lead" data-id="${l.id}">Bearbeiten</button>
+        <button class="btn btn-danger" style="font-size:13px;padding:10px 14px;" data-act="del-lead" data-id="${l.id}">Löschen</button>
+      </div>
+    `;
+    leadsList.appendChild(card);
+  });
+
+  renderStats();
+}
+
+// Lead-Klicks (bearbeiten/löschen) via Delegation
+leadsList.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'edit-lead'){
+    openLeadModal(id);
+  } else if (btn.dataset.act === 'del-lead'){
+    if (confirm('Lead wirklich löschen?')){
+      state.leads = state.leads.filter(l => l.id !== id);
+      save(STORAGE.leads, state.leads);
+      renderLeads();
+    }
+  }
+});
+
+// Lead-Modal öffnen (neu oder bearbeiten)
+function openLeadModal(id){
+  const lead = id ? state.leads.find(l => l.id === id) : {
+    id: uid(), name:'', branche:'', kontakt:'', status:'Neu',
+    naechsterSchritt:'', followup:'', notiz:''
+  };
+  const isNew = !id;
+
+  document.getElementById('modalTitle').textContent = isNew ? 'Neuer Lead' : 'Lead bearbeiten';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Name / Unternehmen</label>
+        <input type="text" id="f-name" value="${escapeAttr(lead.name)}" placeholder="z.B. Studio Bella" />
+      </div>
+      <div class="form-field">
+        <label>Branche</label>
+        <input type="text" id="f-branche" value="${escapeAttr(lead.branche)}" placeholder="z.B. Friseur, Kosmetik..." />
+      </div>
+      <div class="form-field">
+        <label>Kontaktmethode</label>
+        <input type="text" id="f-kontakt" value="${escapeAttr(lead.kontakt)}" placeholder="Instagram, E-Mail, Telefon..." />
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="f-status">
+          ${LEAD_STATUSES.map(s => `<option value="${s}" ${s===lead.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Nächster Schritt</label>
+        <input type="text" id="f-step" value="${escapeAttr(lead.naechsterSchritt)}" placeholder="z.B. Follow-up Nachricht senden" />
+      </div>
+      <div class="form-field">
+        <label>Follow-up Datum</label>
+        <input type="date" id="f-followup" value="${escapeAttr(lead.followup)}" />
+      </div>
+      <div class="form-field">
+        <label>Notiz</label>
+        <textarea id="f-notiz" placeholder="Was hast du besprochen?">${escapeHtml(lead.notiz || '')}</textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" id="cancelBtn">Abbrechen</button>
+      <button class="btn btn-primary" id="saveBtn">${isNew ? 'Lead speichern' : 'Speichern'}</button>
+    </div>
+  `;
+  showModal();
+
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('saveBtn').onclick = () => {
+    lead.name = document.getElementById('f-name').value.trim();
+    lead.branche = document.getElementById('f-branche').value.trim();
+    lead.kontakt = document.getElementById('f-kontakt').value.trim();
+    lead.status = document.getElementById('f-status').value;
+    lead.naechsterSchritt = document.getElementById('f-step').value.trim();
+    lead.followup = document.getElementById('f-followup').value;
+    lead.notiz = document.getElementById('f-notiz').value.trim();
+
+    if (!lead.name){
+      alert('Bitte gib einen Namen an.');
+      return;
+    }
+    if (isNew){
+      state.leads.unshift(lead);
+    }
+    save(STORAGE.leads, state.leads);
+    closeModal();
+    renderLeads();
+  };
+}
+
+function badgeClassLead(status){
+  switch(status){
+    case 'Neu':              return 'badge-neu';
+    case 'Kontaktiert':      return 'badge-kontaktiert';
+    case 'Interesse':        return 'badge-interesse';
+    case 'Angebot gesendet': return 'badge-angebot';
+    case 'Gewonnen':         return 'badge-gewonnen';
+    case 'Verloren':         return 'badge-verloren';
+    default:                 return 'badge-neu';
+  }
+}
+
+/* =========================================================
+   PROJEKTE
+   ========================================================= */
+const PROJECT_STATUSES = ['Offen', 'In Arbeit', 'Wartet auf Kunde', 'Abgeschlossen'];
+const projectsList = document.getElementById('projectsList');
+const projectSearch = document.getElementById('projectSearch');
+
+document.getElementById('addProjectBtn').addEventListener('click', () => openProjectModal());
+projectSearch.addEventListener('input', renderProjects);
+
+function renderProjects(){
+  const q = projectSearch.value.trim().toLowerCase();
+  const filtered = state.projects.filter(p => {
+    if (!q) return true;
+    return (p.kunde + ' ' + p.paket + ' ' + p.status + ' ' + (p.todos||'')).toLowerCase().includes(q);
+  });
+
+  projectsList.innerHTML = '';
+
+  if (filtered.length === 0){
+    projectsList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">▣</div>
+        <div class="empty-title">${state.projects.length === 0 ? 'Noch keine Projekte' : 'Keine Treffer'}</div>
+        <div>${state.projects.length === 0 ? 'Lege dein erstes Projekt an' : 'Suchbegriff anpassen'}</div>
+      </div>`;
+    renderStats();
+    return;
+  }
+
+  filtered.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'entity-card';
+    card.innerHTML = `
+      <div class="entity-header">
+        <div>
+          <h3 class="entity-name">${escapeHtml(p.kunde) || '—'}</h3>
+          <div class="entity-meta">${escapeHtml(p.paket) || 'Kein Paket'}</div>
+        </div>
+        <span class="badge ${badgeClassProject(p.status)}">${p.status}</span>
+      </div>
+      <div class="entity-body">
+        <div class="entity-field">
+          <span class="entity-field-label">Deadline</span>
+          <span class="entity-field-value">${p.deadline ? formatDate(p.deadline) : '—'}</span>
+        </div>
+      </div>
+      ${p.todos ? `<div class="entity-note">${escapeHtml(p.todos)}</div>` : ''}
+      <div class="entity-actions" style="margin-top:14px;">
+        <button class="btn btn-secondary" style="flex:1;font-size:13px;padding:10px;" data-act="edit-project" data-id="${p.id}">Bearbeiten</button>
+        <button class="btn btn-danger" style="font-size:13px;padding:10px 14px;" data-act="del-project" data-id="${p.id}">Löschen</button>
+      </div>
+    `;
+    projectsList.appendChild(card);
+  });
+
+  renderStats();
+}
+
+projectsList.addEventListener('click', e => {
+  const btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'edit-project'){
+    openProjectModal(id);
+  } else if (btn.dataset.act === 'del-project'){
+    if (confirm('Projekt wirklich löschen?')){
+      state.projects = state.projects.filter(p => p.id !== id);
+      save(STORAGE.projects, state.projects);
+      renderProjects();
+    }
+  }
+});
+
+function openProjectModal(id){
+  const project = id ? state.projects.find(p => p.id === id) : {
+    id: uid(), kunde:'', paket:'', status:'Offen', deadline:'', todos:''
+  };
+  const isNew = !id;
+
+  document.getElementById('modalTitle').textContent = isNew ? 'Neues Projekt' : 'Projekt bearbeiten';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Kunde</label>
+        <input type="text" id="p-kunde" value="${escapeAttr(project.kunde)}" placeholder="z.B. Salon Müller" />
+      </div>
+      <div class="form-field">
+        <label>Paket</label>
+        <input type="text" id="p-paket" value="${escapeAttr(project.paket)}" placeholder="z.B. Website + CRM Setup" />
+      </div>
+      <div class="form-field">
+        <label>Status</label>
+        <select id="p-status">
+          ${PROJECT_STATUSES.map(s => `<option value="${s}" ${s===project.status?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Deadline</label>
+        <input type="date" id="p-deadline" value="${escapeAttr(project.deadline)}" />
+      </div>
+      <div class="form-field">
+        <label>To-dos / Notizen</label>
+        <textarea id="p-todos" placeholder="Was steht noch an?">${escapeHtml(project.todos || '')}</textarea>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-secondary" id="cancelBtn">Abbrechen</button>
+      <button class="btn btn-primary" id="saveBtn">${isNew ? 'Projekt speichern' : 'Speichern'}</button>
+    </div>
+  `;
+  showModal();
+
+  document.getElementById('cancelBtn').onclick = closeModal;
+  document.getElementById('saveBtn').onclick = () => {
+    project.kunde = document.getElementById('p-kunde').value.trim();
+    project.paket = document.getElementById('p-paket').value.trim();
+    project.status = document.getElementById('p-status').value;
+    project.deadline = document.getElementById('p-deadline').value;
+    project.todos = document.getElementById('p-todos').value.trim();
+
+    if (!project.kunde){
+      alert('Bitte gib einen Kundennamen an.');
+      return;
+    }
+    if (isNew){
+      state.projects.unshift(project);
+    }
+    save(STORAGE.projects, state.projects);
+    closeModal();
+    renderProjects();
+  };
+}
+
+function badgeClassProject(status){
+  switch(status){
+    case 'Offen':            return 'badge-offen';
+    case 'In Arbeit':        return 'badge-arbeit';
+    case 'Wartet auf Kunde': return 'badge-wartet';
+    case 'Abgeschlossen':    return 'badge-abgeschlossen';
+    default:                 return 'badge-offen';
+  }
+}
+
+/* =========================================================
+   NOTIZEN
+   ========================================================= */
+const notesList = document.getElementById('notesList');
+const noteInput = document.getElementById('noteInput');
+
+document.getElementById('addNoteBtn').addEventListener('click', () => {
+  const text = noteInput.value.trim();
+  if (!text) return;
+  state.notes.unshift({ id: uid(), text, created: Date.now() });
+  save(STORAGE.notes, state.notes);
+  noteInput.value = '';
+  renderNotes();
+});
+
+function renderNotes(){
+  notesList.innerHTML = '';
+
+  if (state.notes.length === 0){
+    notesList.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">✎</div>
+        <div class="empty-title">Noch keine Notizen</div>
+        <div>Speichere deine Ideen und Gedanken</div>
+      </div>`;
+    return;
+  }
+
+  state.notes.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'note-card';
+    div.innerHTML = `
+      <div class="note-meta">
+        <span class="note-date">${formatDateTime(n.created)}</span>
+        <button class="task-delete" data-id="${n.id}">×</button>
+      </div>
+      <div class="note-content">${escapeHtml(n.text)}</div>
+    `;
+    notesList.appendChild(div);
+  });
+}
+
+notesList.addEventListener('click', e => {
+  const btn = e.target.closest('.task-delete');
+  if (!btn) return;
+  if (confirm('Notiz löschen?')){
+    state.notes = state.notes.filter(n => n.id !== btn.dataset.id);
+    save(STORAGE.notes, state.notes);
+    renderNotes();
+  }
+});
+
+/* =========================================================
+   STATISTIK-KARTEN auf dem Dashboard
+   ========================================================= */
+function renderStats(){
+  const tasksOpen = state.tasks.filter(t => !t.done).length;
+  const tasksDone = state.tasks.filter(t => t.done).length;
+  const leadsTotal = state.leads.length;
+  const leadsWon = state.leads.filter(l => l.status === 'Gewonnen').length;
+  const projectsOpen = state.projects.filter(p => p.status !== 'Abgeschlossen').length;
+
+  document.getElementById('statTasksOpen').textContent = tasksOpen;
+  document.getElementById('statTasksDone').textContent = tasksDone;
+  document.getElementById('statLeadsTotal').textContent = leadsTotal;
+  document.getElementById('statLeadsWon').textContent = leadsWon;
+  document.getElementById('statProjectsOpen').textContent = projectsOpen;
+}
+
+/* =========================================================
+   MODAL Helpers
+   ========================================================= */
+const modalOverlay = document.getElementById('modalOverlay');
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => {
+  if (e.target === modalOverlay) closeModal();
+});
+
+function showModal(){ modalOverlay.classList.add('active'); document.body.style.overflow='hidden'; }
+function closeModal(){ modalOverlay.classList.remove('active'); document.body.style.overflow=''; }
+
+/* =========================================================
+   UTILS
+   ========================================================= */
+// HTML escapen, um XSS zu vermeiden
+function escapeHtml(str){
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+// Für value="..." in Inputs
+function escapeAttr(str){
+  if (str == null) return '';
+  return String(str).replace(/"/g, '&quot;');
+}
+// Datum (YYYY-MM-DD) hübsch formatieren
+function formatDate(iso){
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+// Timestamp formatieren
+function formatDateTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' }) +
+         ' · ' + d.toLocaleTimeString('de-DE', { hour:'2-digit', minute:'2-digit' });
+}
+
+/* =========================================================
+   INIT - Alles beim Start rendern
+   ========================================================= */
+renderHeader();
+renderTasks();
+renderGoals();
+renderLeads();
+renderProjects();
+renderNotes();
+renderStats();
+</script>
+
+</body>
+</html>
